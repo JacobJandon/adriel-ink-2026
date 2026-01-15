@@ -11,7 +11,11 @@ import {
 	Bookmark,
 	// LayoutGrid,
 	Compass,
+	CreditCard,
+	BookOpen,
+	Shield,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import './sidebar-overrides.css';
 import { useRecentApps, useFavoriteApps, useApps } from '@/hooks/use-apps';
 import {
@@ -89,11 +93,17 @@ function AppMenuItem({
 
 	return (
 		<SidebarMenuItem className="group/app-item">
-			<SidebarMenuButton
-				asChild
-				tooltip={app.title}
-				className="cursor-pointer transition-opacity hover:opacity-75 pr-0"
+			<motion.div
+				initial={{ opacity: 0, x: -20 }}
+				animate={{ opacity: 1, x: 0 }}
+				transition={{ duration: 0.3 }}
+				whileHover={{ x: 4 }}
 			>
+				<SidebarMenuButton
+					asChild
+					tooltip={app.title}
+					className="cursor-pointer transition-all duration-300 hover:bg-white/5 hover:backdrop-blur-lg hover:shadow-lg hover:border-white/10 rounded-xl border border-transparent pr-0"
+				>
 				<a
 					href={`/app/${app.id}`}
 					onClick={(e) => {
@@ -142,12 +152,14 @@ function AppMenuItem({
 					/>
 				</SidebarMenuAction>
 			)}
+			</motion.div>
 		</SidebarMenuItem>
 	);
 }
 
 export function AppSidebar() {
 	const { user } = useAuth();
+	const isAdmin = user?.email === 'andraxreal@gmail.com';
 	const navigate = useNavigate();
 	const [searchQuery, setSearchQuery] = React.useState('');
 	const [expandedGroups, setExpandedGroups] = React.useState<string[]>([
@@ -203,10 +215,10 @@ export function AppSidebar() {
 			<Sidebar
 				collapsible="icon"
 				className={cn(
-					'bg-bg-2 transition-all duration-300 ease-in-out',
+					'bg-gradient-to-b from-neutral-900/70 via-neutral-900/60 to-neutral-950/70 backdrop-blur-xl border-r border-white/10 transition-all duration-300 ease-in-out shadow-2xl',
 				)}
 			>
-				<SidebarContent className="mt-2">
+				<SidebarContent className="mt-3">
 					{/* Build Button */}
 					<SidebarGroup>
 						<SidebarGroupContent>
@@ -214,7 +226,7 @@ export function AppSidebar() {
 							{location.pathname !== '/' && (
 								<div
 									className={cn(
-										isCollapsed ? ' pr-2' : 'px-1',
+										isCollapsed ? 'pr-2' : 'px-2',
 									)}
 								>
 									<TooltipProvider delayDuration={0}>
@@ -222,10 +234,10 @@ export function AppSidebar() {
 											<TooltipTrigger asChild>
 												<button
 													className={cn(
-														'group flex w-full border-[0.5px] border-bg-2 items-center gap-2 font-medium hover:opacity-80 hover:cursor-pointer p-2 rounded-md cursor-hand text-text-secondary hover:text-text-primary',
+														'group border border-cyan-400/20 items-center gap-2 font-medium hover:border-cyan-400/40 hover:shadow-lg hover:shadow-cyan-500/30 transition-all duration-200 bg-gradient-to-br from-cyan-500/80 via-blue-500/80 to-indigo-500/80 hover:from-cyan-400/90 hover:via-blue-400/90 hover:to-indigo-400/90 text-white backdrop-blur-md shadow-xl',
 														isCollapsed
-															? 'justify-center bg-accent'
-															: 'justify-start bg-accent',
+															? 'h-10 w-10 rounded-full flex justify-center items-center'
+															: 'w-full flex justify-start rounded-2xl p-3',
 													)}
 													onClick={() => {
 														// Collapse sidebar when starting a new build
@@ -235,14 +247,18 @@ export function AppSidebar() {
 														navigate('/');
 													}}
 												>
-													<Plus className="h-4 w-4 text-neutral-50" />
+													<Plus className="h-5 w-5 text-white drop-shadow-md" />
 													{!isCollapsed && (
-														<span className="font-medium text-neutral-50">
-															New build
+														<span className="text-sm font-semibold text-white drop-shadow-md">
+															Build New
 														</span>
 													)}
 												</button>
 											</TooltipTrigger>
+											<TooltipContent side="right" className="bg-bg-2 border-white/10">
+												<p>Start a new project</p>
+												<p className="text-xs text-text-tertiary">Ctrl/Cmd + N</p>
+											</TooltipContent>
 										</Tooltip>
 									</TooltipProvider>
 								</div>
@@ -251,16 +267,21 @@ export function AppSidebar() {
 					</SidebarGroup>
 
 					{!isCollapsed && (
-						<ScrollArea className="flex-1 px-1 relative">
+						<ScrollArea className="flex-1 px-2 relative">
 							{/* Gradient fade overlay for app names at sidebar edge */}
-							<div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-bg-2 to-transparent pointer-events-none z-10"></div>
+							<div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-neutral-900/60 to-transparent pointer-events-none z-10"></div>
 							{/* Navigation */}
 							<SidebarGroup>
 								{expandedGroups.includes('apps') && (
 									<SidebarGroupContent>
 										{/* Search */}
-										<div className="relative bg-bg-3 mb-4 mt-2">
-											<Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
+										<motion.div
+											initial={{ opacity: 0, y: -10 }}
+											animate={{ opacity: 1, y: 0 }}
+											transition={{ duration: 0.3 }}
+											className="relative mb-4 mt-2"
+										>
+											<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-400/60 z-10" />
 											<Input
 												placeholder="Search apps..."
 												value={searchQuery}
@@ -269,9 +290,9 @@ export function AppSidebar() {
 														e.target.value,
 													)
 												}
-												className="h-10 w-full pl-8 placeholder:text-primary/40"
+												className="h-10 w-full pl-9 pr-3 bg-black/30 backdrop-blur-md border border-white/10 hover:border-white/20 focus:border-cyan-400/50 rounded-xl placeholder:text-white/40 text-white shadow-lg transition-all duration-300"
 											/>
-										</div>
+										</motion.div>
 										<SidebarMenu>
 											{isSearching ? (
 												// Search Results
@@ -402,13 +423,13 @@ export function AppSidebar() {
 									<SidebarGroup className='mt-4'>
 										<SidebarGroupLabel
 											className={cn(
-												'flex items-center gap-2 text-md text-text-primary',
+												'flex items-center gap-2 text-sm font-semibold text-white/90 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 rounded-lg px-3 py-2 mb-2',
 												isCollapsed &&
 													'justify-center px-0',
 											)}
 										>
 											{!isCollapsed && 'Bookmarked'}
-											<Bookmark className="h-5 w-5 fill-yellow-500 text-yellow-500" />
+											<Bookmark className="h-4 w-4 fill-yellow-400 text-yellow-400 drop-shadow-md" />
 											
 										</SidebarGroupLabel>
 										<SidebarGroupContent>
@@ -571,33 +592,122 @@ export function AppSidebar() {
 					{user && (
 						<SidebarMenu>
 							<SidebarMenuItem>
-								<SidebarMenuButton
-									id="discover-link"
-									onClick={() => navigate('/discover')}
-									tooltip="Discover"
-									className="group hover:opacity-80 hover:cursor-pointer hover:bg-bg-1/50 transition-all duration-200"
+								<motion.div
+									whileHover={{ scale: 1.02, x: 4 }}
+									transition={{
+										type: 'spring',
+										stiffness: 400,
+										damping: 17,
+									}}
 								>
-									<Compass className="h-6 w-6 text-text-primary/60 group-hover:text-primary/80 transition-colors" />
-									{!isCollapsed && (
-										<span className="text-text-primary/80 font-medium group-hover:text-primary transition-colors">
-											Discover
-										</span>
-									)}
-								</SidebarMenuButton>
+									<SidebarMenuButton
+										id="discover-link"
+										onClick={() => navigate('/discover')}
+										tooltip="Discover"
+										className="group hover:bg-gradient-to-r hover:from-purple-500/10 hover:to-pink-500/10 hover:border-white/10 border border-transparent rounded-xl backdrop-blur-md transition-all duration-300 hover:shadow-lg"
+									>
+										<Compass className="h-5 w-5 text-white/60 group-hover:text-purple-400 transition-colors duration-300" />
+										{!isCollapsed && (
+											<span className="text-white/80 font-medium group-hover:text-white transition-colors duration-300">
+												Discover
+											</span>
+										)}
+									</SidebarMenuButton>
+								</motion.div>
 							</SidebarMenuItem>
 							<SidebarMenuItem>
-								<SidebarMenuButton
-									onClick={() => navigate('/settings')}
-									tooltip="Settings"
-									className="group hover:opacity-80 hover:cursor-pointer hover:bg-bg-1/50 transition-all duration-200"
+								<motion.div
+									whileHover={{ scale: 1.02, x: 4 }}
+									transition={{
+										type: 'spring',
+										stiffness: 400,
+										damping: 17,
+									}}
 								>
-									<Settings className="h-6 w-6 text-text-primary/60 group-hover:text-primary/80 transition-colors" />
-									{!isCollapsed && (
-										<span className="font-medium text-text-primary/80 group-hover:text-primary transition-colors">
-											Settings
-										</span>
-									)}
-								</SidebarMenuButton>
+									<SidebarMenuButton
+										onClick={() => navigate('/guide')}
+										tooltip="Guide & Help"
+										className="group hover:bg-gradient-to-r hover:from-amber-500/10 hover:to-orange-500/10 hover:border-white/10 border border-transparent rounded-xl backdrop-blur-md transition-all duration-300 hover:shadow-lg"
+									>
+										<BookOpen className="h-5 w-5 text-white/60 group-hover:text-amber-400 transition-colors duration-300" />
+										{!isCollapsed && (
+											<span className="text-white/80 font-medium group-hover:text-white transition-colors duration-300">
+												Guide
+											</span>
+										)}
+									</SidebarMenuButton>
+								</motion.div>
+							</SidebarMenuItem>
+							<SidebarMenuItem>
+								<motion.div
+									whileHover={{ scale: 1.02, x: 4 }}
+									transition={{
+										type: 'spring',
+										stiffness: 400,
+										damping: 17,
+									}}
+								>
+									<SidebarMenuButton
+										onClick={() => navigate('/settings')}
+										tooltip="Settings"
+										className="group hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-cyan-500/10 hover:border-white/10 border border-transparent rounded-xl backdrop-blur-md transition-all duration-300 hover:shadow-lg"
+									>
+										<Settings className="h-5 w-5 text-white/60 group-hover:text-blue-400 transition-colors duration-300" />
+										{!isCollapsed && (
+											<span className="font-medium text-white/80 group-hover:text-white transition-colors duration-300">
+												Settings
+											</span>
+										)}
+									</SidebarMenuButton>
+								</motion.div>
+							</SidebarMenuItem>
+							{isAdmin && (
+								<SidebarMenuItem>
+									<motion.div
+										whileHover={{ scale: 1.02, x: 4 }}
+										transition={{
+											type: 'spring',
+											stiffness: 400,
+											damping: 17,
+										}}
+									>
+										<SidebarMenuButton
+											onClick={() => navigate('/admin')}
+											tooltip="Admin Panel"
+											className="group hover:bg-gradient-to-r hover:from-red-500/10 hover:to-pink-500/10 hover:border-white/10 border border-transparent rounded-xl backdrop-blur-md transition-all duration-300 hover:shadow-lg"
+										>
+											<Shield className="h-5 w-5 text-white/60 group-hover:text-red-400 transition-colors duration-300" />
+											{!isCollapsed && (
+												<span className="font-medium text-white/80 group-hover:text-white transition-colors duration-300">
+													Admin Panel
+												</span>
+											)}
+										</SidebarMenuButton>
+									</motion.div>
+								</SidebarMenuItem>
+							)}
+							<SidebarMenuItem>
+								<motion.div
+									whileHover={{ scale: 1.02, x: 4 }}
+									transition={{
+										type: 'spring',
+										stiffness: 400,
+										damping: 17,
+									}}
+								>
+									<SidebarMenuButton
+										onClick={() => navigate('/usage')}
+										tooltip="Usage & Billing"
+										className="group hover:bg-gradient-to-r hover:from-green-500/10 hover:to-emerald-500/10 hover:border-white/10 border border-transparent rounded-xl backdrop-blur-md transition-all duration-300 hover:shadow-lg"
+									>
+										<CreditCard className="h-5 w-5 text-white/60 group-hover:text-green-400 transition-colors duration-300" />
+										{!isCollapsed && (
+											<span className="font-medium text-white/80 group-hover:text-white transition-colors duration-300">
+												Usage & Billing
+											</span>
+										)}
+									</SidebarMenuButton>
+								</motion.div>
 							</SidebarMenuItem>
 						</SidebarMenu>
 					)}

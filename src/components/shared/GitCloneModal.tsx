@@ -20,8 +20,6 @@ import {
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
-import { normalizeAppTitle } from '@/utils/string';
 import type { GitCloneTokenData } from '@/api-types';
 
 interface GitCloneModalProps {
@@ -42,15 +40,10 @@ export function GitCloneModal({
 }: GitCloneModalProps) {
 	const [tokenData, setTokenData] = useState<GitCloneTokenData | null>(null);
 	const [isGenerating, setIsGenerating] = useState(false);
+	const [copiedCommand, setCopiedCommand] = useState(false);
+	const [copiedSetup, setCopiedSetup] = useState(false);
 	const [tokenRevealed, setTokenRevealed] = useState(false);
 	const [timeRemaining, setTimeRemaining] = useState<string | null>(null);
-
-	const { copied: copiedCommand, copy: copyCommand, reset: resetCommand } = useCopyToClipboard({
-		successMessage: 'Copied to clipboard!',
-	});
-	const { copied: copiedSetup, copy: copySetup, reset: resetSetup } = useCopyToClipboard({
-		successMessage: 'Copied to clipboard!',
-	});
 
 	const host = window.location.host; // includes port
 	const protocol = host.startsWith('localhost') || host.startsWith('127.0.0.1') ? 'http' : 'https';
@@ -60,12 +53,12 @@ export function GitCloneModal({
 		if (!open) {
 			setTokenData(null);
 			setIsGenerating(false);
-			resetCommand();
-			resetSetup();
+			setCopiedCommand(false);
+			setCopiedSetup(false);
 			setTokenRevealed(false);
 			setTimeRemaining(null);
 		}
-	}, [open, resetCommand, resetSetup]);
+	}, [open]);
 
 	useEffect(() => {
 		if (tokenData?.expiresAt) {
@@ -101,6 +94,27 @@ export function GitCloneModal({
 			toast.error('Failed to generate token');
 		} finally {
 			setIsGenerating(false);
+		}
+	};
+
+	const normalizeAppTitle = (title: string): string => {
+		return title
+			.toLowerCase()
+			.replace(/[^a-z0-9\s-]/g, '') // Remove special chars except spaces and hyphens
+			.trim()
+			.replace(/\s+/g, '-') // Replace spaces with hyphens
+			.replace(/-+/g, '-') // Replace multiple hyphens with single
+			.replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+	};
+
+	const handleCopyCommand = async (text: string, setCopied: (val: boolean) => void) => {
+		try {
+			await navigator.clipboard.writeText(text);
+			setCopied(true);
+			toast.success('Copied to clipboard!');
+			setTimeout(() => setCopied(false), 2500);
+		} catch (error) {
+			toast.error('Failed to copy');
 		}
 	};
 
@@ -141,7 +155,7 @@ export function GitCloneModal({
 										variant="ghost"
 										size="icon"
 										className="h-8 w-8"
-										onClick={() => copyCommand(gitCloneCommand)}
+										onClick={() => handleCopyCommand(gitCloneCommand, setCopiedCommand)}
 									>
 										{copiedCommand ? (
 											<Check className="h-4 w-4 text-green-400" />
@@ -162,7 +176,7 @@ export function GitCloneModal({
 										variant="ghost"
 										size="icon"
 										className="h-8 w-8"
-										onClick={() => copySetup(setupCommands)}
+										onClick={() => handleCopyCommand(setupCommands, setCopiedSetup)}
 									>
 										{copiedSetup ? (
 											<Check className="h-4 w-4 text-green-400" />
@@ -235,7 +249,9 @@ export function GitCloneModal({
 													variant="ghost"
 													size="icon"
 													className="h-8 w-8"
-													onClick={() => copyCommand(gitCloneCommand)}
+													onClick={() =>
+														handleCopyCommand(gitCloneCommand, setCopiedCommand)
+													}
 												>
 													{copiedCommand ? (
 														<Check className="h-4 w-4 text-green-400" />
@@ -287,7 +303,7 @@ export function GitCloneModal({
 												variant="ghost"
 												size="icon"
 												className="h-8 w-8"
-												onClick={() => copySetup(setupCommands)}
+												onClick={() => handleCopyCommand(setupCommands, setCopiedSetup)}
 											>
 												{copiedSetup ? (
 													<Check className="h-4 w-4 text-green-400" />

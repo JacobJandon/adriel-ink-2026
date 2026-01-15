@@ -285,6 +285,20 @@ const AppMetadata = ({
 					<span className="truncate text-ellipsis max-w-60 font-medium">
 						{app.title}
 					</span>
+					{/* Generation Status - show if app is generating */}
+					{app.status === 'generating' && (app as any).statusMessage && (
+						<div className="flex items-center gap-2 text-xs">
+							<Loader2 className="h-3 w-3 animate-spin text-blue-500" />
+							<span className="text-blue-600 dark:text-blue-400 font-medium">
+								{(app as any).statusMessage}
+							</span>
+							{(app as any).progressTotal > 0 && (
+								<span className="text-text-tertiary/70">
+									({(app as any).progressCurrent}/{(app as any).progressTotal})
+								</span>
+							)}
+						</div>
+					)}
 					<StatsDisplay stats={getAppStats(app)} />
 				</div>
 			</div>

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, RefreshCw, X, Code2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppCard } from './AppCard';
+import { AppCardSkeletonGrid } from './AppCardSkeleton';
 import type { AppListData } from '@/hooks/use-paginated-apps';
 import type { AppSortOption } from '@/api-types';
 import { useInfiniteScroll } from '@/hooks/use-infinite-scroll';
@@ -105,11 +106,8 @@ export const AppListContainer: React.FC<AppListContainerProps> = ({
 
   if (loading) {
     return (
-      <div className="flex items-center py-20">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-text-tertiary" />
-          <p className="text-neutral-50">Loading apps...</p>
-        </div>
+      <div className="mt-8">
+        <AppCardSkeletonGrid count={6} />
       </div>
     );
   }

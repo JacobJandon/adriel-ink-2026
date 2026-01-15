@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { LogIn, LogOut, Settings } from 'lucide-react';
+import { LogIn, LogOut, Settings, User, FolderKanban } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
@@ -18,9 +18,11 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuTrigger,
 	DropdownMenuGroup,
+	DropdownMenuSeparator,
 } from '../ui/dropdown-menu';
 import { Button } from '../ui/button';
 import { Skeleton } from '../ui/skeleton';
+import { SubscriptionStatus } from '../subscription-status';
 
 interface AuthButtonProps {
 	className?: string;
@@ -49,15 +51,28 @@ export function AuthButton({ className }: AuthButtonProps) {
 	if (!isAuthenticated || !user) {
 		return (
 			<>
-				<Button
-					variant="ghost"
-					size="sm"
-					onClick={() => setShowLoginModal(true)}
-					className={clsx('gap-2', className)}
+				<motion.div
+					whileHover={{ scale: 1.05 }}
+					whileTap={{ scale: 0.95 }}
 				>
-					<LogIn className="h-4 w-4" />
-					<span>Sign In</span>
-				</Button>
+					<Button
+						variant="ghost"
+						size="sm"
+						onClick={() => setShowLoginModal(true)}
+						className={clsx(
+							'gap-2 h-10 px-4 rounded-xl font-medium',
+							'bg-gradient-to-br from-cyan-500/10 to-blue-500/10',
+							'border border-cyan-400/30 text-cyan-100',
+							'hover:from-cyan-500/20 hover:to-blue-500/20 hover:border-cyan-400/50',
+							'hover:shadow-lg hover:shadow-cyan-500/20',
+							'transition-all duration-300',
+							className
+						)}
+					>
+						<LogIn className="h-4 w-4" />
+						<span>Sign In</span>
+					</Button>
+				</motion.div>
 
 				<LoginModal
 					isOpen={showLoginModal}
@@ -106,42 +121,44 @@ export function AuthButton({ className }: AuthButtonProps) {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button
-					variant="ghost"
-					size="icon"
-					className="relative rounded-full hover:ring-2 hover:ring-primary/20 transition-all"
-				>
-					<Avatar className="h-8 w-8">
-						<AvatarImage
-							src={user.avatarUrl}
-							alt={user.displayName || user.email}
-						/>
-						<AvatarFallback className="bg-text-secondary/10 text-text-primary font-semibold">
-							{getInitials()}
-						</AvatarFallback>
-					</Avatar>
-					{user.emailVerified && (
-						<div className="absolute -bottom-1 -right-1 h-3 w-3 bg-green-500 rounded-full border-2 border-background" />
-					)}
-				</Button>
+				<motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+					<Button
+						variant="ghost"
+						size="icon"
+						className="relative rounded-full h-10 w-10 hover:ring-2 hover:ring-cyan-400/30 hover:bg-white/5 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10"
+					>
+						<Avatar className="h-9 w-9 ring-1 ring-white/10">
+							<AvatarImage
+								src={user.avatarUrl}
+								alt={user.displayName || user.email}
+							/>
+							<AvatarFallback className="bg-gradient-to-br from-cyan-500/20 to-blue-500/20 text-cyan-100 font-semibold">
+								{getInitials()}
+							</AvatarFallback>
+						</Avatar>
+						{user.emailVerified && (
+							<div className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-bg-3 shadow-sm shadow-green-500/50" />
+						)}
+					</Button>
+				</motion.div>
 			</DropdownMenuTrigger>
 
 			<AnimatePresence>
-				<DropdownMenuContent align="end" className="w-72" asChild>
+				<DropdownMenuContent align="end" className="w-72 bg-bg-2/95 backdrop-blur-xl border-white/10" asChild>
 					<motion.div
-						initial={{ opacity: 0, y: -10 }}
-						animate={{ opacity: 1, y: 0 }}
-						exit={{ opacity: 0, y: -10 }}
-						transition={{ duration: 0.2 }}
+						initial={{ opacity: 0, y: -10, scale: 0.95 }}
+						animate={{ opacity: 1, y: 0, scale: 1 }}
+						exit={{ opacity: 0, y: -10, scale: 0.95 }}
+						transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
 					>
 						<DropdownMenuLabel className="p-0">
-							<div className="flex items-start gap-3 p-4">
-								<Avatar className="h-12 w-12">
+							<div className="flex items-start gap-3 p-4 border-b border-white/10">
+								<Avatar className="h-12 w-12 ring-2 ring-cyan-400/20">
 									<AvatarImage
 										src={user.avatarUrl}
 										alt={user.displayName || user.email}
 									/>
-									<AvatarFallback className="bg-text-secondary/10 text-text-primary font-semibold text-lg">
+									<AvatarFallback className="bg-gradient-to-br from-cyan-500/20 to-blue-500/20 text-cyan-100 font-semibold text-lg">
 										{getInitials()}
 									</AvatarFallback>
 								</Avatar>
@@ -158,23 +175,46 @@ export function AuthButton({ className }: AuthButtonProps) {
 							</div>
 						</DropdownMenuLabel>
 
-						<DropdownMenuGroup>
-							<DropdownMenuItem
-								onClick={() => navigate('/settings')}
-								className="cursor-pointer"
-							>
-								<Settings className="mr-1 h-4 w-4" />
-								Settings
-							</DropdownMenuItem>
-						</DropdownMenuGroup>
+						<DropdownMenuSeparator />
 
+						{/* Subscription Badge */}
+						<div className="px-2 py-2">
+							<SubscriptionStatus compact />
+						</div>
+
+					<DropdownMenuSeparator />
+
+					<DropdownMenuGroup>
 						<DropdownMenuItem
-							onClick={() => logout()}
-							className="cursor-pointer text-destructive focus:text-text-primary"
+							onClick={() => navigate('/profile')}
+							className="cursor-pointer"
 						>
-							<LogOut className="mr-1 h-4 w-4" />
-							Sign Out
+							<User className="mr-1 h-4 w-4" />
+							Profile
 						</DropdownMenuItem>
+						<DropdownMenuItem
+							onClick={() => navigate('/apps')}
+							className="cursor-pointer"
+						>
+							<FolderKanban className="mr-1 h-4 w-4" />
+							My Apps
+						</DropdownMenuItem>
+						<DropdownMenuItem
+							onClick={() => navigate('/settings')}
+							className="cursor-pointer"
+						>
+							<Settings className="mr-1 h-4 w-4" />
+							Settings
+						</DropdownMenuItem>
+					</DropdownMenuGroup>
+
+					<DropdownMenuItem
+						onClick={() => logout()}
+						className="cursor-pointer text-destructive focus:text-text-primary"
+					>
+						<LogOut className="mr-1 h-4 w-4" />
+						Sign Out
+					</DropdownMenuItem>
 					</motion.div>
 				</DropdownMenuContent>
 			</AnimatePresence>

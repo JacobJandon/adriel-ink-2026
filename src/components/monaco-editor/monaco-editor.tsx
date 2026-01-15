@@ -36,7 +36,7 @@ self.MonacoEnvironment = {
 };
 
 // From GitHub Dark theme
-monaco.editor.defineTheme('vibesdk-dark', {
+monaco.editor.defineTheme('v1-dev-dark', {
 	base: 'vs-dark',
 	inherit: true,
 	rules: [
@@ -77,59 +77,92 @@ monaco.editor.defineTheme('vibesdk-dark', {
 	},
 });
 
-monaco.editor.defineTheme('vibesdk', {
-	base: 'vs',
+monaco.editor.defineTheme('v1-dev', {
+	base: 'vs-dark',
 	inherit: true,
 	rules: [
-		{ token: '', foreground: '000000', background: 'fbfbfc' },
-		{ token: 'comment', foreground: '6e7781', fontStyle: 'italic' },
-		{ token: 'keyword', foreground: '0092b8' },
-		{ token: 'number', foreground: '0550ae' },
-		{ token: 'string', foreground: '0a3069' },
-		{ token: 'type', foreground: '0092b8' },
-		{ token: 'class', foreground: '0092b8' },
-		{ token: 'interface', foreground: '0092b8' },
-		{ token: 'function', foreground: '953800' },
-		{ token: 'member', foreground: '0550ae' },
-		{ token: 'variable', foreground: '24292f' },
-		{ token: 'constant', foreground: '0550ae' },
-		{ token: 'operator', foreground: '0092b8' },
-		{ token: 'namespace', foreground: '0092b8' },
-		{ token: 'predefined', foreground: '0092b8' },
-		{ token: 'invalid', foreground: 'ff0000' },
+		{ token: '', foreground: 'e0e0e0', background: '1a1a1a' },
+		{ token: 'comment', foreground: '6a9955', fontStyle: 'italic' },
+		{ token: 'keyword', foreground: '569cd6' },
+		{ token: 'number', foreground: 'b5cea8' },
+		{ token: 'string', foreground: 'ce9178' },
+		{ token: 'type', foreground: '4ec9b0' },
+		{ token: 'class', foreground: '4ec9b0' },
+		{ token: 'interface', foreground: '4ec9b0' },
+		{ token: 'function', foreground: 'dcdcaa' },
+		{ token: 'member', foreground: '9cdcfe' },
+		{ token: 'variable', foreground: '9cdcfe' },
+		{ token: 'constant', foreground: '4fc1ff' },
+		{ token: 'operator', foreground: 'd4d4d4' },
+		{ token: 'namespace', foreground: '4ec9b0' },
+		{ token: 'predefined', foreground: 'c586c0' },
+		{ token: 'invalid', foreground: 'f48771' },
 	],
 	colors: {
-		'editor.background': '#fbfbfc',
-		'editor.foreground': '#24292f',
-		'editorLineNumber.foreground': '#8c959f',
-		'editorLineNumber.activeForeground': '#24292f',
-		'editorCursor.foreground': '#0092b8',
-		'editorIndentGuide.background': '#d0d7de',
-		'editorIndentGuide.activeBackground': '#8c959f',
-		'editor.selectionBackground': '#0092b820',
-		'editor.inactiveSelectionBackground': '#0092b810',
-		'editor.lineHighlightBackground': '#0092b808',
-		'editor.wordHighlightBackground': '#0092b815',
-		'editor.wordHighlightStrongBackground': '#0092b820',
-		'editor.findMatchBackground': '#0092b830',
-		'editor.findMatchHighlightBackground': '#0092b815',
+		'editor.background': '#1a1a1a',
+		'editor.foreground': '#e0e0e0',
+		'editorLineNumber.foreground': '#858585',
+		'editorLineNumber.activeForeground': '#c6c6c6',
+		'editorCursor.foreground': '#528bff',
+		'editorIndentGuide.background': '#404040',
+		'editorIndentGuide.activeBackground': '#707070',
+		'editor.selectionBackground': '#264f78',
+		'editor.inactiveSelectionBackground': '#3a3d41',
+		'editor.lineHighlightBackground': '#2a2a2a',
+		'editor.wordHighlightBackground': '#575757',
+		'editor.wordHighlightStrongBackground': '#004972',
+		'editor.findMatchBackground': '#515c6a',
+		'editor.findMatchHighlightBackground': '#ea5c0055',
 	},
 });
 
-monaco.editor.setTheme('vibesdk');
+monaco.editor.setTheme('v1-dev');
+
+monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+	noSemanticValidation: true,
+	noSyntaxValidation: true,
+});
+
+// Configure TypeScript defaults for JSX support
+monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+	jsx: monaco.languages.typescript.JsxEmit.React,
+	allowJs: true,
+	allowSyntheticDefaultImports: true,
+	esModuleInterop: true,
+	moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+	module: monaco.languages.typescript.ModuleKind.ESNext,
+	target: monaco.languages.typescript.ScriptTarget.ESNext,
+	jsxFactory: 'React.createElement',
+	jsxFragmentFactory: 'React.Fragment',
+});
+
+// Configure JavaScript defaults for JSX support
+monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+	allowJs: true,
+	allowSyntheticDefaultImports: true,
+	esModuleInterop: true,
+	jsx: monaco.languages.typescript.JsxEmit.React,
+	moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+	module: monaco.languages.typescript.ModuleKind.ESNext,
+	target: monaco.languages.typescript.ScriptTarget.ESNext,
+	jsxFactory: 'React.createElement',
+	jsxFragmentFactory: 'React.Fragment',
+});
 
 export type MonacoEditorProps = React.ComponentProps<'div'> & {
 	createOptions?: monaco.editor.IStandaloneEditorConstructionOptions;
 	find?: string;
 	replace?: string;
-	enableTypeScriptFeatures?: 'auto' | boolean;
 };
+
+/**
+ * TODO: Create a file map to properly manage multiple files in monaco
+ */
 
 export const MonacoEditor = memo<MonacoEditorProps>(function MonacoEditor({
 	createOptions = {},
 	find,
 	replace,
-	enableTypeScriptFeatures = 'auto',
 	...props
 }) {
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -137,63 +170,6 @@ export const MonacoEditor = memo<MonacoEditorProps>(function MonacoEditor({
 	const prevValue = useRef<string>(createOptions.value || '');
 	const stickyScroll = useRef(true);
 	const { theme } = useTheme();
-
-	const shouldEnableTypeScript = React.useMemo(() => {
-		if (enableTypeScriptFeatures === 'auto') {
-			return !createOptions.readOnly;
-		}
-		return enableTypeScriptFeatures;
-	}, [enableTypeScriptFeatures, createOptions.readOnly]);
-
-	// Configure TypeScript diagnostics based on mode
-	useEffect(() => {
-		const tsDefaults = monaco.languages.typescript.typescriptDefaults;
-		const jsDefaults = monaco.languages.typescript.javascriptDefaults;
-
-		if (shouldEnableTypeScript) {
-			// Enable full IntelliSense for editing
-			tsDefaults.setDiagnosticsOptions({
-				noSemanticValidation: false,
-				noSyntaxValidation: false,
-			});
-			tsDefaults.setCompilerOptions({
-				jsx: monaco.languages.typescript.JsxEmit.React,
-				allowJs: true,
-				allowSyntheticDefaultImports: true,
-				esModuleInterop: true,
-				moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
-				module: monaco.languages.typescript.ModuleKind.ESNext,
-				target: monaco.languages.typescript.ScriptTarget.ESNext,
-				jsxFactory: 'React.createElement',
-				jsxFragmentFactory: 'React.Fragment',
-			});
-			jsDefaults.setCompilerOptions({
-				allowJs: true,
-				allowSyntheticDefaultImports: true,
-				esModuleInterop: true,
-				jsx: monaco.languages.typescript.JsxEmit.React,
-				moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
-				module: monaco.languages.typescript.ModuleKind.ESNext,
-				target: monaco.languages.typescript.ScriptTarget.ESNext,
-				jsxFactory: 'React.createElement',
-				jsxFragmentFactory: 'React.Fragment',
-			});
-		} else {
-			// Disable expensive features for viewing
-			tsDefaults.setDiagnosticsOptions({
-				noSemanticValidation: true,
-				noSyntaxValidation: true,
-			});
-			tsDefaults.setCompilerOptions({
-				jsx: monaco.languages.typescript.JsxEmit.React,
-				target: monaco.languages.typescript.ScriptTarget.ESNext,
-			});
-			jsDefaults.setCompilerOptions({
-				jsx: monaco.languages.typescript.JsxEmit.React,
-				target: monaco.languages.typescript.ScriptTarget.ESNext,
-			});
-		}
-	}, [shouldEnableTypeScript]);
 
 
 	useEffect(() => {
@@ -204,7 +180,7 @@ export const MonacoEditor = memo<MonacoEditorProps>(function MonacoEditor({
 		editor.current = monaco.editor.create(containerRef.current!, {
 			language: createOptions.language || 'typescript',
 			minimap: { enabled: false },
-			theme: configuredTheme === 'dark' ? 'vibesdk-dark' : 'vibesdk',
+			theme: configuredTheme === 'dark' ? 'v1-dev-dark' : 'v1-dev',
 			automaticLayout: true,
 			value: defaultCode,
 			fontSize: 13,
@@ -213,34 +189,30 @@ export const MonacoEditor = memo<MonacoEditorProps>(function MonacoEditor({
 
 		// Add scroll listener to detect user interaction
 		const editorDomNode = editor.current.getDomNode();
-		const handleWheel = () => {
-			if (stickyScroll.current) {
-				stickyScroll.current = false;
-			}
-		};
-		const handleKeydown = (e: KeyboardEvent) => {
-			// Disable sticky scroll on arrow keys, Page Up/Down
-			if (e.key.includes('Arrow') || e.key.includes('Page')) {
+		if (editorDomNode) {
+			editorDomNode.addEventListener('wheel', () => {
 				if (stickyScroll.current) {
 					stickyScroll.current = false;
 				}
-			}
-		};
+			});
 
-		if (editorDomNode) {
-			editorDomNode.addEventListener('wheel', handleWheel);
-			editorDomNode.addEventListener('keydown', handleKeydown);
+			editorDomNode.addEventListener('keydown', (e) => {
+				// Disable sticky scroll on arrow keys, Page Up/Down
+				if (e.key.includes('Arrow') || e.key.includes('Page')) {
+					if (stickyScroll.current) {
+						stickyScroll.current = false;
+					}
+				}
+			});
 		}
 
 		return () => {
-			if (editorDomNode) {
-				editorDomNode.removeEventListener('wheel', handleWheel);
-				editorDomNode.removeEventListener('keydown', handleKeydown);
-			}
+			// Dispose the model first (prevents "Could not find source file" errors)
 			const model = editor.current?.getModel();
 			if (model) {
 				model.dispose();
 			}
+			// Then dispose the editor
 			editor.current?.dispose();
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -251,20 +223,16 @@ export const MonacoEditor = memo<MonacoEditorProps>(function MonacoEditor({
 			const model = editor.current.getModel();
 			if (!model) return;
 
-			model.pushEditOperations(
-				[],
-				[{
-					range: model.getFullModelRange(),
-					text: createOptions.value || ''
-				}],
-				() => null
-			);
+			// Update the content
+			editor.current.setValue(createOptions.value || '');
 
 			if (stickyScroll.current) {
+				// Scroll to bottom
 				const lineCount = model.getLineCount();
 				editor.current.revealLine(lineCount);
 			}
 
+			// Update language if changed
 			if (createOptions.language) {
 				monaco.editor.setModelLanguage(model, createOptions.language);
 			}
@@ -333,7 +301,7 @@ export const MonacoEditor = memo<MonacoEditorProps>(function MonacoEditor({
 	// Update theme when app theme changes
 	useEffect(() => {
 		if (editor.current) {
-			monaco.editor.setTheme(theme === 'dark' ? 'vibesdk-dark' : 'vibesdk');
+			monaco.editor.setTheme(theme === 'dark' ? 'v1-dev-dark' : 'v1-dev');
 		}
 	}, [theme]);
 

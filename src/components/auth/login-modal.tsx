@@ -449,14 +449,18 @@ export function LoginModal({
 								<p className="text-center text-xs text-text-tertiary">
 									By continuing, you agree to our{' '}
 									<a
-										href="#"
+										href="/terms"
+										target="_blank"
+										rel="noopener noreferrer"
 										className="underline hover:text-text-primary"
 									>
 										Terms of Service
 									</a>{' '}
 									and{' '}
 									<a
-										href="#"
+										href="/privacy"
+										target="_blank"
+										rel="noopener noreferrer"
 										className="underline hover:text-text-primary"
 									>
 										Privacy Policy
