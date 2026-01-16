@@ -33,8 +33,8 @@ import { mergeFiles } from '@/utils/file-helpers';
 import { ChatModals } from './components/chat-modals';
 import { MainContentPanel } from './components/main-content-panel';
 import { ChatInput } from './components/chat-input';
-import { useVault } from '@/hooks/use-vault';
-import { VaultUnlockModal } from '@/components/vault';
+// import { useVault } from '@/hooks/use-vault';
+// import { VaultUnlockModal } from '@/components/vault';
 
 const isPhasicBlueprint = (blueprint?: BlueprintType | null): blueprint is PhasicBlueprint =>
 	!!blueprint && 'implementationRoadmap' in blueprint;
@@ -98,12 +98,15 @@ export default function Chat() {
 		setDebugMessages([]);
 	}, []);
 
-	const { state: vaultState, requestUnlock, clearUnlockRequest } = useVault();
+	// Vault functionality disabled - requires backend support
+	// const { state: vaultState, requestUnlock, clearUnlockRequest } = useVault();
+	const vaultState = { status: 'not_setup' as const, unlockRequested: false, unlockReason: null };
 	const handleVaultUnlockRequired = useCallback(
 		(reason: string) => {
-			requestUnlock(reason);
+			console.log('Vault unlock requested (disabled):', reason);
+			// requestUnlock(reason);
 		},
-		[requestUnlock],
+		[],
 	);
 
 	const {
@@ -223,15 +226,17 @@ export default function Chat() {
 
 	const WS_OPEN = 1;
 
+	// Vault status messaging disabled - vault feature requires backend support
 	const sendVaultStatusToAgent = useCallback(
-		(ws: AgentWebSocket) => {
-			if (vaultState.status === 'unlocked') {
-				ws.send(JSON.stringify({ type: 'vault_unlocked' }));
-			} else if (vaultState.status === 'locked') {
-				ws.send(JSON.stringify({ type: 'vault_locked' }));
-			}
+		(_ws: AgentWebSocket) => {
+			// Vault not setup, no status to send
+			// if (vaultState.status === 'unlocked') {
+			// 	ws.send(JSON.stringify({ type: 'vault_unlocked' }));
+			// } else if (vaultState.status === 'locked') {
+			// 	ws.send(JSON.stringify({ type: 'vault_locked' }));
+			// }
 		},
-		[vaultState.status],
+		[],
 	);
 
 	useEffect(() => {
@@ -909,13 +914,14 @@ export default function Chat() {
 				user={user}
 			/>
 
-			<VaultUnlockModal
+			{/* Vault feature disabled - requires backend support */}
+			{/* <VaultUnlockModal
 				open={vaultState.unlockRequested && vaultState.status === 'locked'}
 				onOpenChange={(open) => {
 					if (!open) clearUnlockRequest();
 				}}
 				reason={vaultState.unlockReason ?? undefined}
-			/>
+			/> */}
 		</div>
 	);
 }
