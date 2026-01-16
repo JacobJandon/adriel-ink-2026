@@ -447,6 +447,9 @@ export function useChat({
 				return;
 			}
 
+			// Mark as initiated IMMEDIATELY to prevent race conditions
+			hasInitiatedSessionRef.current = true;
+			
 			try {
 				if (urlChatId === 'new') {
 					if (!userQuery) {
@@ -463,8 +466,6 @@ export function useChat({
 						return;
 					}
 
-					// Mark that we've initiated a session to prevent duplicates
-					hasInitiatedSessionRef.current = true;
 					// Prevent duplicate session creation on rerenders while streaming
 					connectionStatus.current = 'connecting';
 
@@ -605,8 +606,9 @@ export function useChat({
 					});
 				}
 			} catch (error) {
-				// Allow retry on failure
+				// Allow retry on failure - reset both status and initiation flag
 				connectionStatus.current = 'idle';
+				hasInitiatedSessionRef.current = false;
 				logger.error('Error initializing code generation:', error);
 				if (error instanceof RateLimitExceededError) {
 					const rateLimitMessage = handleRateLimitError(error.details, onDebugMessage);
@@ -642,12 +644,10 @@ export function useChat({
         };
     }, []);
     
-    // Reset initiation flag when urlChatId changes (navigating to new chat)
+    // Reset initiation flag when urlChatId changes
     useEffect(() => {
-        if (urlChatId !== 'new') {
-            // Reset flag when navigating to an existing chat
-            hasInitiatedSessionRef.current = false;
-        }
+        // Always reset the flag when the chatId changes to allow new sessions
+        hasInitiatedSessionRef.current = false;
     }, [urlChatId]);
 
     // Close previous websocket on change
