@@ -562,13 +562,16 @@ export function useChat({
 						throw new Error('Failed to initialize agent session');
 					}
 
-					// Connect to WebSocket
-					logger.debug('connecting to ws with created id');
-					connectWithRetry(result.websocketUrl);
-					setChatId(result.agentId); // This comes from the server response
-					
-					// Emit app-created event for sidebar updates
-					appEvents.emitAppCreated(result.agentId, {
+				// Connect to WebSocket
+				logger.debug('connecting to ws with created id');
+				connectWithRetry(result.websocketUrl);
+				setChatId(result.agentId); // This comes from the server response
+				
+				// Clear the app creation flag from home page now that session is successfully created
+				sessionStorage.removeItem('adriel-app-creation-in-progress');
+				
+				// Emit app-created event for sidebar updates
+				appEvents.emitAppCreated(result.agentId, {
 					title: userQuery || 'New App',
 					description: userQuery,
 				});
@@ -603,11 +606,13 @@ export function useChat({
 						disableGenerate: true, // We'll handle generation resume in the WebSocket open handler
 					});
 				}
-			} catch (error) {
-				// Allow retry on failure - reset both status and chatId tracking
-				connectionStatus.current = 'idle';
-				initiatedChatIdRef.current = null;
-				logger.error('Error initializing code generation:', error);
+		} catch (error) {
+			// Allow retry on failure - reset both status and chatId tracking
+			connectionStatus.current = 'idle';
+			initiatedChatIdRef.current = null;
+			// Clear the home page creation flag to allow retry
+			sessionStorage.removeItem('adriel-app-creation-in-progress');
+			logger.error('Error initializing code generation:', error);
 				if (error instanceof RateLimitExceededError) {
 					const rateLimitMessage = handleRateLimitError(error.details, onDebugMessage);
 					setMessages(prev => [...prev, rateLimitMessage]);
