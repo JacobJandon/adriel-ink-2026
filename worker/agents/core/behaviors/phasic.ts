@@ -147,9 +147,17 @@ export class PhasicCodingBehavior extends BaseCodingBehavior<PhasicState> implem
         
         this.logger.info('Committed customized template files to git');
 
-        this.initializeAsync().catch((error: unknown) => {
-            this.broadcastError("Initialization failed", error);
-        });
+        // Start async initialization (sandbox deploy, setup commands, readme)
+        this.initializeAsync()
+            .then(async () => {
+                this.logger.info('Initialization completed, starting automatic code generation');
+                // Automatically start code generation after initialization
+                await this.generateAllFiles();
+            })
+            .catch((error: unknown) => {
+                this.broadcastError("Initialization or generation failed", error);
+            });
+        
         this.logger.info(`Agent ${this.getAgentId()} session: ${this.state.sessionId} initialized successfully`);
         return this.state;
     }
