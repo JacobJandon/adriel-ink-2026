@@ -78,6 +78,8 @@ export function useChat({
 	const deploymentTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	// Track the latest connection attempt to avoid handling stale socket events
 	const connectAttemptIdRef = useRef(0);
+	// Track if we've already initiated a session to prevent duplicates
+	const hasInitiatedSessionRef = useRef(false);
 	const connectWithRetryRef = useRef<
 		((
 			wsUrl: string,
@@ -438,6 +440,12 @@ export function useChat({
 	useEffect(() => {
 		async function init() {
 			if (!urlChatId || connectionStatus.current !== 'idle') return;
+			
+			// Prevent duplicate initialization even across component remounts
+			if (hasInitiatedSessionRef.current) {
+				logger.info('Session already initiated, skipping duplicate initialization');
+				return;
+			}
 
 			try {
 				if (urlChatId === 'new') {
@@ -455,6 +463,8 @@ export function useChat({
 						return;
 					}
 
+					// Mark that we've initiated a session to prevent duplicates
+					hasInitiatedSessionRef.current = true;
 					// Prevent duplicate session creation on rerenders while streaming
 					connectionStatus.current = 'connecting';
 
@@ -562,6 +572,8 @@ export function useChat({
 						description: userQuery,
 					});
 				} else if (connectionStatus.current === 'idle') {
+					// Mark that we've initiated a session to prevent duplicates
+					hasInitiatedSessionRef.current = true;
 					// Prevent duplicate connect calls on rerenders
 					connectionStatus.current = 'connecting';
 
@@ -629,6 +641,14 @@ export function useChat({
             }
         };
     }, []);
+    
+    // Reset initiation flag when urlChatId changes (navigating to new chat)
+    useEffect(() => {
+        if (urlChatId !== 'new') {
+            // Reset flag when navigating to an existing chat
+            hasInitiatedSessionRef.current = false;
+        }
+    }, [urlChatId]);
 
     // Close previous websocket on change
     useEffect(() => {
