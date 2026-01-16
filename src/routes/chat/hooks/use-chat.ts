@@ -78,8 +78,8 @@ export function useChat({
 	const deploymentTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	// Track the latest connection attempt to avoid handling stale socket events
 	const connectAttemptIdRef = useRef(0);
-	// Track if we've already initiated a session to prevent duplicates
-	const hasInitiatedSessionRef = useRef(false);
+	// Track which chatId we've initiated to prevent duplicates per chat
+	const initiatedChatIdRef = useRef<string | null>(null);
 	const connectWithRetryRef = useRef<
 		((
 			wsUrl: string,
@@ -441,14 +441,14 @@ export function useChat({
 		async function init() {
 			if (!urlChatId || connectionStatus.current !== 'idle') return;
 			
-			// Prevent duplicate initialization even across component remounts
-			if (hasInitiatedSessionRef.current) {
-				logger.info('Session already initiated, skipping duplicate initialization');
+			// Prevent duplicate initialization for the same chatId
+			if (initiatedChatIdRef.current === urlChatId) {
+				logger.info(`Session already initiated for chatId ${urlChatId}, skipping duplicate initialization`);
 				return;
 			}
 
-			// Mark as initiated IMMEDIATELY to prevent race conditions
-			hasInitiatedSessionRef.current = true;
+			// Mark this chatId as initiated
+			initiatedChatIdRef.current = urlChatId;
 			
 			try {
 				if (urlChatId === 'new') {
@@ -462,14 +462,14 @@ export function useChat({
 					if (userQuery.length > MAX_AGENT_QUERY_LENGTH) {
 						const errorMsg = `Prompt too large (${userQuery.length} characters). Maximum allowed is ${MAX_AGENT_QUERY_LENGTH} characters.`;
 						toast.error(errorMsg);
-						setMessages(() => [createAIMessage('main', errorMsg)]);
-						return;
-					}
+					setMessages(() => [createAIMessage('main', errorMsg)]);
+					return;
+				}
 
-					// Prevent duplicate session creation on rerenders while streaming
-					connectionStatus.current = 'connecting';
+				// Prevent duplicate session creation on rerenders while streaming
+				connectionStatus.current = 'connecting';
 
-					// Start new code generation using API client
+				// Start new code generation using API client
 					const response = await apiClient.createAgentSession({
 						query: userQuery,
 						projectType,
@@ -569,16 +569,14 @@ export function useChat({
 					
 					// Emit app-created event for sidebar updates
 					appEvents.emitAppCreated(result.agentId, {
-						title: userQuery || 'New App',
-						description: userQuery,
-					});
-				} else if (connectionStatus.current === 'idle') {
-					// Mark that we've initiated a session to prevent duplicates
-					hasInitiatedSessionRef.current = true;
-					// Prevent duplicate connect calls on rerenders
-					connectionStatus.current = 'connecting';
+					title: userQuery || 'New App',
+					description: userQuery,
+				});
+			} else if (connectionStatus.current === 'idle') {
+				// Prevent duplicate connect calls on rerenders
+				connectionStatus.current = 'connecting';
 
-					setIsBootstrapping(false);
+				setIsBootstrapping(false);
 					// Show starting message with thinking indicator
 					setMessages(() => [
 						createAIMessage('fetching-chat', 'Starting from where you left off...', true)
@@ -606,9 +604,9 @@ export function useChat({
 					});
 				}
 			} catch (error) {
-				// Allow retry on failure - reset both status and initiation flag
+				// Allow retry on failure - reset both status and chatId tracking
 				connectionStatus.current = 'idle';
-				hasInitiatedSessionRef.current = false;
+				initiatedChatIdRef.current = null;
 				logger.error('Error initializing code generation:', error);
 				if (error instanceof RateLimitExceededError) {
 					const rateLimitMessage = handleRateLimitError(error.details, onDebugMessage);
@@ -643,12 +641,6 @@ export function useChat({
             }
         };
     }, []);
-    
-    // Reset initiation flag when urlChatId changes
-    useEffect(() => {
-        // Always reset the flag when the chatId changes to allow new sessions
-        hasInitiatedSessionRef.current = false;
-    }, [urlChatId]);
 
     // Close previous websocket on change
     useEffect(() => {
