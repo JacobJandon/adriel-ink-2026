@@ -1,4 +1,4 @@
-import { AIAvatar } from '../../../components/icons/logos';
+import { AdrielLogo } from '../../../components/layout/adriel-logo';
 import clsx from 'clsx';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -346,10 +346,10 @@ export function AIMessage({
 	return (
 		<div className="flex gap-3">
 			<div className="align-text-top pl-1">
-				<AIAvatar className="size-6 text-orange-500" />
+				<AdrielLogo size={24} className="flex-shrink-0" />
 			</div>
 			<div className="flex flex-col gap-2 min-w-0">
-				<div className="font-mono font-medium text-text-50">Orange</div>
+				<div className="font-mono font-medium text-text-50">Adriel AI</div>
 				
 				{/* Message content with inline tool events (from streaming) */}
 				{orderedContent.length > 0 && (
