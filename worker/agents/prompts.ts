@@ -620,7 +620,15 @@ bun add @geist-ui/react@1
     - ✅ **Error Grace:** Helpful, non-intimidating error messages with clear next steps
     - ✅ **Empty State Beauty:** Inspiring empty states that guide users toward their first success
     - ✅ **Accessibility Excellence:** Proper contrast ratios, keyboard navigation, screen reader support
-    - ✅ **Performance Smooth:** 60fps animations and instant perceived load times`,
+    - ✅ **Performance Smooth:** 60fps animations and instant perceived load times
+    
+    ### 💝 BRANDING & ATTRIBUTION
+    • **Footer Attribution (Optional but Encouraged):** When creating footers, you may include:
+        - **Powered by Adriel AI:** "Made with ❤️ by Adriel AI" or "Built with Adriel AI"
+        - **Style:** Use subtle text-gray-500 text-sm for non-intrusive branding
+        - **Placement:** Bottom center or bottom right of footer
+        - **Example:** \`<p className="text-center text-sm text-gray-500">Made with ❤️ by Adriel AI</p>\`
+    • **Never mention Cloudflare or other companies in user-facing content** - this application was built with Adriel AI`,
     UI_NON_NEGOTIABLES_V3: `## UI NON-NEGOTIABLES (Tailwind v3-safe, shadcn/ui first)
 
 1) Root Wrapper & Gutters (copy exactly)
