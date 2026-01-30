@@ -52,6 +52,9 @@ export class CodingAgentController extends BaseController {
      * Start the incremental code generation process
      */
     static async startCodeGeneration(request: Request, env: Env, _: ExecutionContext, context: RouteContext): Promise<Response> {
+        // Declare requestId outside try block to make it accessible in catch
+        let requestId: string | undefined;
+        
         try {
             this.logger.info('Starting code generation process');
 
@@ -103,12 +106,29 @@ export class CodingAgentController extends BaseController {
                 }
             }
 
+            // Generate a unique request identifier based on user, query, and timestamp to prevent duplicates
+            const requestIdentifier = `${user.id}:${query}:${Date.now()}`;
+            const requestHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(requestIdentifier));
+            requestId = Array.from(new Uint8Array(requestHash)).map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 16);
+            
+            // Check for duplicate request using a temporary KV store or in-memory cache
+            const duplicateKey = `agent_creation_${requestId}`;
+            const existingRequest = await env.VibecoderStore.get(duplicateKey);
+            
+            if (existingRequest) {
+                this.logger.warn(`Duplicate agent creation request detected for user ${user.id}`, { query, requestId });
+                return CodingAgentController.createErrorResponse('Duplicate request detected. Please wait for the previous request to complete.', 429);
+            }
+            
+            // Set a temporary marker to prevent duplicate requests (expires in 30 seconds)
+            await env.VibecoderStore.put(duplicateKey, 'processing', { expirationTtl: 30 });
+            
             const agentId = generateId();
             const modelConfigService = new ModelConfigService(env);
             const projectType = resolveProjectType(body);
             const behaviorType = resolveBehaviorType(body);
 
-            this.logger.info(`Resolved behaviorType: ${behaviorType}, projectType: ${projectType} for agent ${agentId}`);
+            this.logger.info(`Resolved behaviorType: ${behaviorType}, projectType: ${projectType} for agent ${agentId}`, { requestId });
                                 
             // Fetch all user model configs, api keys and agent instance at once
             const userConfigsRecord = await modelConfigService.getUserModelConfigs(user.id);
@@ -185,6 +205,24 @@ export class CodingAgentController extends BaseController {
                 writer.write("terminate");
                 writer.close();
                 this.logger.info(`Agent ${agentId} terminated successfully`);
+                
+                // Clean up duplicate request marker
+                try {
+                    const duplicateKey = `agent_creation_${requestId}`;
+                    await env.VibecoderStore.delete(duplicateKey);
+                } catch (cleanupError) {
+                    this.logger.warn('Failed to clean up duplicate request marker', cleanupError);
+                }
+            }).catch(async (error) => {
+                this.logger.error(`Agent ${agentId} initialization failed`, error);
+                
+                // Clean up duplicate request marker even on failure
+                try {
+                    const duplicateKey = `agent_creation_${requestId}`;
+                    await env.VibecoderStore.delete(duplicateKey);
+                } catch (cleanupError) {
+                    this.logger.warn('Failed to clean up duplicate request marker after error', cleanupError);
+                }
             });
 
             this.logger.info(`Agent ${agentId} init launched successfully`);
@@ -203,6 +241,17 @@ export class CodingAgentController extends BaseController {
             });
         } catch (error) {
             this.logger.error('Error starting code generation', error);
+            
+            // Clean up duplicate request marker on error if requestId was set
+            if (requestId) {
+                try {
+                    const duplicateKey = `agent_creation_${requestId}`;
+                    await env.VibecoderStore.delete(duplicateKey);
+                } catch (cleanupError) {
+                    this.logger.warn('Failed to clean up duplicate request marker in catch block', cleanupError);
+                }
+            }
+            
             return CodingAgentController.handleError(error, 'start code generation');
         }
     }
